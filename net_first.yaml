@@ -1,0 +1,34 @@
+---
+- name : Get Config
+  hosts: all
+  tasks:
+    - name: Get Running config
+      ios_command:
+        commands:
+          - show run
+      register: config
+
+    - name: Get IOS Device Hostname
+      ios_facts:
+        gather_subset: all
+      when: ansible_network_os == "ios"
+
+    - name: Get NXOS Device Hostname
+      nxos_command:
+        commands:
+          - show hostname
+      register: device_hostname
+      when: ansible_network_os == "nxos"
+
+    - name: Save config
+      copy:
+        content: "{{config.stdout[0]}}"
+        dest: "configs/show_run_{{ansible_net_hostname}}.txt"
+      when: ansible_network_os == "ios"
+
+    - name: Save config
+      copy:
+        content: "{{config.stdout[0]}}"
+        dest: "configs/show_run_{{device_hostname.stdout[0]}}.txt"
+      when: ansible_network_os == "nxos"
+...
